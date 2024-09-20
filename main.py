@@ -14,12 +14,12 @@ def save_data(data, tags):
     try:
         arr = []
         for i, tag in enumerate(tags):
-            if "Values" not in data[i]:
+            if "Value" not in data[i]:
                 continue
 
-            value = data[i]["Values"]
+            value = data[i]["Value"]
             if isinstance(value, dict):
-                value = value["Values"]
+                value = value["Value"]
 
             elif not isinstance(value, (str, float, int, bool)):
                 value = str(value)
@@ -33,7 +33,7 @@ def save_data(data, tags):
                     data[i]["Good"],
                     data[i]["Questionable"],
                     data[i]["Substituted"],
-                    data[i]["Annotations"],
+                    data[i]["Annotated"],
                 )
             )
 
@@ -57,7 +57,7 @@ async def send_data(urls, data):
 
                 save_data(res, data)
 
-                print("=====================================================")
+                print("=============================================================")
                 await asyncio.sleep(60)
                 continue
     except Exception as e:
@@ -74,7 +74,7 @@ async def fetch_data(session, url):
             response.raise_for_status()
             data = await response.json()
 
-            return data["data"]
+            return data
     except Exception as e:
         return {"error": f"An error occurred: {str(e)}"}
 
@@ -84,7 +84,6 @@ def check_connection():
     username = Config.PI_SERVER_USER
     password = Config.PI_SERVER_PASSWORD
     
-    print(host, username, password)
     try:
         test_conn = requests.get(
             host,
@@ -116,7 +115,7 @@ def check_connection():
 
 def index():
     host = os.getenv("PI_SERVER_ENDPOINT")
-    base_url = host + "stream/{}/value"
+    base_url = host + "streams/{}/value"
     tag_lists = get_all_tags()
     urls = [base_url.format(tag[1]) for tag in tag_lists]
 
@@ -130,7 +129,7 @@ def index():
             )
             time.sleep(5)
             continue
-
+        
         print("=============================================================")
         print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
         asyncio.run(send_data(urls, tag_lists))
