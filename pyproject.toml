@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "app-single-fetch"
+version = "0.1.0"
+description = ""
+authors = ["Perdana Main <firman.fp123@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+requests = "^2.32.3"
+psycopg2 = "^2.9.9"
+python-dotenv = "^1.0.1"
+asyncio = "^3.4.3"
+aiohttp = "^3.10.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
