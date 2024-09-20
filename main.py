@@ -83,6 +83,8 @@ def check_connection():
     host = Config.PI_SERVER
     username = Config.PI_SERVER_USER
     password = Config.PI_SERVER_PASSWORD
+    
+    print(host, username, password)
     try:
         test_conn = requests.get(
             host,
@@ -113,7 +115,8 @@ def check_connection():
 
 
 def index():
-    base_url = Config.PI_SERVER + "stream/{}/values"
+    host = os.getenv("PI_SERVER_ENDPOINT")
+    base_url = host + "stream/{}/value"
     tag_lists = get_all_tags()
     urls = [base_url.format(tag[1]) for tag in tag_lists]
 
