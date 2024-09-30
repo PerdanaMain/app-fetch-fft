@@ -291,6 +291,24 @@ files = [
 ]
 
 [[package]]
+name = "digital-twin-migration"
+version = "1.1.1"
+description = ""
+optional = false
+python-versions = ">=3.8"
+files = []
+develop = false
+
+[package.extras]
+dev = ["Sphinx (>=4.3.0,<7.1.0)", "black (>=23.0,<24.0)", "build", "furo (==2023.7.26)", "isort (>=5.12,<5.13)", "mypy (>=1.0,<1.5)", "myst-parser (>=1.0,<2.1)", "packaging", "pytest", "pytest-cov", "pytest-sphinx", "ruff", "setuptools", "sphinx-autobuild (==2021.3.14)", "sphinx-autodoc-typehints (==1.23.3)", "sphinx-copybutton (==0.5.2)", "twine (>=1.11.0)", "wheel"]
+
+[package.source]
+type = "git"
+url = "https://github.com/Cizz22/digital-twin-migration/"
+reference = "HEAD"
+resolved_reference = "01ed643c2e865bac65f3419d99af09fd790443ea"
+
+[[package]]
 name = "frozenlist"
 version = "1.4.1"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -746,4 +764,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "c5ab3aa0ec33c8a484b0653a3599aa39bcbb3f516f33fe13193c56e1bfb5634b"
+content-hash = "28e2a298de21607999e7f914f1d8556df2ef1655451d72be796a6ba466068bf4"

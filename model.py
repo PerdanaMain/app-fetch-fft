@@ -1,31 +1,31 @@
 from database import getConnection
+from requests import get, post
+from config import Config
+from api.auth import login
 
 
 def get_all_tags():
-    query = "SELECT id, web_id FROM master_tag"
-
-    conn = getConnection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(query)
-            rows = cur.fetchall()
-            cur.close()
-            return rows
-        finally:
-            conn.close()
+    try:
+        token = login()
+        
+        res = get(Config.API_SERVER+"/pfi/api/v1/tags", headers={
+                "Authorization": "Bearer "+ token
+            })
+        tags = res.json()["data"]
+        
+        return tags
+    except Exception as e:
+      print('An exception occurred: ', e)
 
 
 def create_tag(data):
-    query = """
-    INSERT INTO value_tag (tag_id, time_stamp, value, units_abbreviation, good, questionable, substituted, annotated) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"""
-
-    conn = getConnection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.executemany(query, data)
-            conn.commit()
-            cur.close()
-        finally:
-            conn.close()
+    try:
+      token = login()
+      
+      post(Config.API_SERVER+"/pfi/api/v1/tag-values", headers={
+        "Authorization": "Bearer "+ token
+        }, json={
+        "data": data
+      })
+    except Exception as e:
+      print('An exception occurred: ', e)

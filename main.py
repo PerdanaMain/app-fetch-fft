@@ -1,11 +1,10 @@
 from model import get_all_tags, create_tag
+from database import check_connection
 from config import Config
-from datetime import datetime
-from requests.auth import HTTPBasicAuth
-from requests.exceptions import ConnectionError, Timeout, RequestException
+from datetime import datetime, timedelta
+
 import asyncio
 import aiohttp
-import requests
 import os
 import time
 
@@ -23,21 +22,21 @@ def save_data(data, tags):
 
             elif not isinstance(value, (str, float, int, bool)):
                 value = str(value)
-
+                
             arr.append(
-                (
-                    tag[0],
-                    data[i]["Timestamp"],
-                    value,
-                    data[i]["UnitsAbbreviation"],
-                    data[i]["Good"],
-                    data[i]["Questionable"],
-                    data[i]["Substituted"],
-                    data[i]["Annotated"],
-                )
+                {
+                    "tag_id": tag["id"],
+                    "value": value,
+                    "time_stamp": data[i]["Timestamp"],
+                    "units_abbreviation": data[i]["UnitsAbbreviation"],
+                    "good": data[i]["Good"],
+                    "questionable": data[i]["Questionable"],
+                    "substituted": data[i]["Substituted"],
+                    "annotated": data[i]["Annotated"],
+                }
             )
-
         create_tag(arr)
+
         print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Data saved")
 
     except Exception as e:
@@ -79,47 +78,16 @@ async def fetch_data(session, url):
         return {"error": f"An error occurred: {str(e)}"}
 
 
-def check_connection():
-    host = Config.PI_SERVER
-    username = Config.PI_SERVER_USER
-    password = Config.PI_SERVER_PASSWORD
-    
-    try:
-        test_conn = requests.get(
-            host,
-            auth=HTTPBasicAuth(
-                username=username,
-                password=password,
-            ),
-            verify=False,  # Avoid SSL verification for this example
-            timeout=10,  # Set a timeout for the request
-        )
-        if test_conn.status_code == 200:
-            print("Connection successful, status code:", test_conn.status_code)
-            return True
-        else:
-            print(f"Received unexpected status code: {test_conn.status_code}")
-            return False
-
-    except ConnectionError:
-        print("Error: Unable to connect to the server. The connection was lost.")
-        return False
-    except Timeout:
-        print("Error: The request timed out.")
-        return False
-
-    except RequestException as e:
-        print(f"An error occurred: {e}")
-        return False
-
 
 def index():
     host = os.getenv("PI_SERVER_ENDPOINT")
     base_url = host + "streams/{}/value"
-    tag_lists = get_all_tags()
-    urls = [base_url.format(tag[1]) for tag in tag_lists]
+    
 
     while True:
+        tag_lists = get_all_tags()
+        urls = [base_url.format(tag["web_id"]) for tag in tag_lists]
+        
         conn = check_connection()
         if conn == False:
             print("=============================================================")
