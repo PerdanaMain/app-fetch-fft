@@ -13,6 +13,8 @@ python-dotenv = "^1.0.1"
 asyncio = "^3.4.3"
 aiohttp = "^3.10.5"
 sqlalchemy = "^2.0.35"
+pytz = "^2024.2"
+celery = "^5.4.0"
 
 
 [build-system]

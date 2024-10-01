@@ -1,7 +1,6 @@
 from database import getConnection
 from requests import get, post
 from config import Config
-from api.auth import login
 
 
 def get_all_tags():
@@ -21,7 +20,7 @@ def create_tag(data):
       conn = getConnection()
       
       query = """
-      INSERT INTO pfi_value_tag (tag_id, time_stamp, value, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+      INSERT INTO pfi_value_tag (tag_id, value, time_stamp, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,now(),now())
       """
       
       cur = conn.cursor()

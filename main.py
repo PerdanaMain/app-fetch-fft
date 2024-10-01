@@ -2,6 +2,7 @@ from model import get_all_tags, create_tag
 from database import check_pi_connection
 from config import Config
 from datetime import datetime, timedelta
+from format_gmt import format_to_gmt
 
 import asyncio
 import aiohttp
@@ -22,24 +23,24 @@ def save_data(data, tags):
 
             elif not isinstance(value, (str, float, int, bool)):
                 value = str(value)
-                
+            
+            time_stamp = format_to_gmt(data[i]["Timestamp"][:19])
+           
             arr.append(
                 (
-                    tag["id"],
+                    tag[0],
                     value,
-                    data[i]["Timestamp"],
+                    time_stamp,
                     data[i]["UnitsAbbreviation"],
                     data[i]["Good"],
                     data[i]["Questionable"],
                     data[i]["Substituted"],
                     data[i]["Annotated"],
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 )
             )
         create_tag(arr)
 
-        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Data saved")
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"Total Data saved: {len(arr)}")
 
     except Exception as e:
         print("An exception occurred: ", str(e))
@@ -86,24 +87,24 @@ def index():
     base_url = host + "streams/{}/value"
     
 
-    while True:
-        tag_lists = get_all_tags()
-        urls = [base_url.format(tag[1]) for tag in tag_lists]
+    tag_lists = get_all_tags()
+    urls = [base_url.format(tag[1]) for tag in tag_lists]
         
         
-        conn = check_pi_connection()
-        if conn == False:
-            print("=============================================================")
-            print(
-                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                "Connection failed, retrying in 5 seconds",
-            )
-            time.sleep(5)
-            continue
-        
+    conn = check_pi_connection()
+    if conn == False:
+        print("=============================================================")
+        print(
+            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "Connection failed, retrying in 5 seconds",
+        )
+    else:        
         print("=============================================================")
         print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
+        
+        
         asyncio.run(send_data(urls, tag_lists))
+        
 
 
 if __name__ == "__main__":
