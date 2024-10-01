@@ -13,13 +13,14 @@ def getConnection():
             database=Config.DATABASE,
             user=Config.USER,
             password=Config.PASSWORD,
+            port=Config.PORT
         )
         return conn
     except Exception as e:
         print(f"Error connecting to the database: {e}")
         return None
 
-def check_connection():
+def check_pi_connection():
     host = Config.PI_SERVER
     username = Config.PI_SERVER_USER
     password = Config.PI_SERVER_PASSWORD

@@ -1,5 +1,5 @@
 from model import get_all_tags, create_tag
-from database import check_connection
+from database import check_pi_connection
 from config import Config
 from datetime import datetime, timedelta
 
@@ -24,16 +24,18 @@ def save_data(data, tags):
                 value = str(value)
                 
             arr.append(
-                {
-                    "tag_id": tag["id"],
-                    "value": value,
-                    "time_stamp": data[i]["Timestamp"],
-                    "units_abbreviation": data[i]["UnitsAbbreviation"],
-                    "good": data[i]["Good"],
-                    "questionable": data[i]["Questionable"],
-                    "substituted": data[i]["Substituted"],
-                    "annotated": data[i]["Annotated"],
-                }
+                (
+                    tag["id"],
+                    value,
+                    data[i]["Timestamp"],
+                    data[i]["UnitsAbbreviation"],
+                    data[i]["Good"],
+                    data[i]["Questionable"],
+                    data[i]["Substituted"],
+                    data[i]["Annotated"],
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                )
             )
         create_tag(arr)
 
@@ -86,9 +88,10 @@ def index():
 
     while True:
         tag_lists = get_all_tags()
-        urls = [base_url.format(tag["web_id"]) for tag in tag_lists]
+        urls = [base_url.format(tag[1]) for tag in tag_lists]
         
-        conn = check_connection()
+        
+        conn = check_pi_connection()
         if conn == False:
             print("=============================================================")
             print(
