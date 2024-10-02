@@ -1,14 +1,12 @@
 from model import get_all_tags, create_tag
 from database import check_pi_connection
 from config import Config
-from datetime import datetime, timedelta
+from datetime import datetime
 from format_gmt import format_to_gmt
 
 import asyncio
 import aiohttp
 import os
-import time
-
 
 def save_data(data, tags):
     try:
@@ -83,27 +81,31 @@ async def fetch_data(session, url):
 
 
 def index():
-    host = os.getenv("PI_SERVER_ENDPOINT")
-    base_url = host + "streams/{}/value"
-    
+    try:
+        host = os.getenv("PI_SERVER_ENDPOINT")
+        base_url = host + "streams/{}/value"
+        
 
-    tag_lists = get_all_tags()
-    urls = [base_url.format(tag[1]) for tag in tag_lists]
-        
-        
-    conn = check_pi_connection()
-    if conn == False:
-        print("=============================================================")
-        print(
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "Connection failed, retrying in 5 seconds",
-        )
-    else:        
-        print("=============================================================")
-        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
-        
-        
-        asyncio.run(send_data(urls, tag_lists))
+        tag_lists = get_all_tags()
+        urls = [base_url.format(tag[1]) for tag in tag_lists]
+            
+            
+        while True:
+            conn = check_pi_connection()
+            if conn == False:
+                print("=============================================================")
+                print(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Connection failed, retrying in 5 seconds",
+                )
+            else:        
+                print("=============================================================")
+                print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
+                
+                
+                asyncio.run(send_data(urls, tag_lists))
+    except Exception as e:
+        print('An exception occurred', str(e))
         
 
 

@@ -7,7 +7,7 @@ def get_all_tags():
     try:
         conn = getConnection()
         cur = conn.cursor()
-        cur.execute("SELECT id, web_id FROM pfi_ms_tag")
+        cur.execute("SELECT id, web_id FROM dl_ms_tag")
         tags = cur.fetchall()
         
         return tags
@@ -20,7 +20,7 @@ def create_tag(data):
       conn = getConnection()
       
       query = """
-      INSERT INTO pfi_value_tag (tag_id, value, time_stamp, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,now(),now())
+      INSERT INTO dl_value_tag (tag_id, value, time_stamp, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,now(),now())
       """
       
       cur = conn.cursor()
