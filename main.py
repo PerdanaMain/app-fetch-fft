@@ -103,7 +103,7 @@ def index():
                 print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
                 
                 
-                asyncio.run(send_data(urls, tag_lists))
+                # asyncio.run(send_data(urls, tag_lists))
     except Exception as e:
         print('An exception occurred', str(e))
         

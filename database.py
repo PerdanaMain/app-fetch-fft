@@ -3,6 +3,8 @@ from config import Config
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout, RequestException
 import requests
+from datetime import datetime
+import pytz
 
 
 
@@ -39,16 +41,30 @@ def check_pi_connection():
             print("Connection successful, status code:", test_conn.status_code)
             return True
         else:
+            log_disconnection(f"Received unexpected status code: {test_conn.status_code}")
             print(f"Received unexpected status code: {test_conn.status_code}")
             return False
 
     except ConnectionError:
+        log_disconnection("Error: Unable to connect to the server. The connection was lost.")
         print("Error: Unable to connect to the server. The connection was lost.")
         return False
+
     except Timeout:
+        log_disconnection("Error: The request timed out.")
         print("Error: The request timed out.")
         return False
 
     except RequestException as e:
+        log_disconnection(f"An error occurred: {e}")
         print(f"An error occurred: {e}")
         return False
+
+def log_disconnection(message):
+    # Get the current time in GMT+7
+    timezone = pytz.timezone('Asia/Bangkok')  # GMT+7
+    current_time = datetime.now(timezone).strftime('%Y-%m-%d %H:%M:%S.%f')
+    
+    # Writing disconnection info to a file
+    with open('logs/server_log.txt', 'a') as log_file:
+        log_file.write(f"{current_time} - {message}\n")
