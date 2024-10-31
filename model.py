@@ -20,7 +20,7 @@ def create_tag(data):
       conn = getConnection()
       
       query = """
-      INSERT INTO dl_value_tag_temp (tag_id, value, time_stamp, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,now(),now())
+      INSERT INTO dl_value_tag (tag_id, value, time_stamp, units_abbreviation, good, questionable, substituted, annotated, created_at, updated_at) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,now(),now())
       """
       
       cur = conn.cursor()
