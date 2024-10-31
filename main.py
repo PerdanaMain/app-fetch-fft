@@ -96,7 +96,7 @@ def index():
                 print("=============================================================")
                 print(
                     datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "Connection failed, retrying in 5 seconds",
+                    "Connection failed, retrying in 10 seconds",
                 )
             else:        
                 print("=============================================================")
