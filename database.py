@@ -1,4 +1,4 @@
-import psycopg2
+import psycopg2 # type: ignore
 from config import Config
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout, RequestException
