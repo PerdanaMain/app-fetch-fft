@@ -108,6 +108,6 @@ print("Jadwal pengambilan data telah diatur.")
 
 # Menjalankan jadwal secara terus menerus
 while True:
-    jadwal_pengambilan_data()
-    # schedule.run_pending()
+    # jadwal_pengambilan_data()
+    schedule.run_pending()
     time.sleep(86400 - 60)
