@@ -1,99 +1,113 @@
 from model import get_tags_by_id, create_fft
 from database import check_pi_connection
-from datetime import datetime, timedelta
-import time
-import os
-import requests
-from format_gmt import format_to_gmt
-
-# Daftar tag yang akan diambil
-tag_lists = get_tags_by_id(3865, 3866, 3871, 3870)
-
-# Fungsi untuk mengambil data dari URL
-import requests
-from requests.auth import HTTPBasicAuth
-
-import requests
-from requests.auth import HTTPBasicAuth
+from config import Config
 from datetime import datetime
+from format_gmt import format_to_gmt
+import asyncio
+import aiohttp  # type: ignore
+import os
+import schedule  # type: ignore
+import time
 
 def save_data(data, tags):
     try:
+        now = datetime.now()
         arr = []
-        for tag in tags:
+        for i, tag in enumerate(tags):
+            if "Value" not in data[i]:
+                continue
 
-            value = data["Value"]
-
-            if isinstance(value, dict) and "Value" in value:
+            value = data[i]["Value"]
+            if isinstance(value, dict):
                 value = value["Value"]
+
             elif not isinstance(value, (str, float, int, bool)):
                 value = str(value)
-            time_stamp = format_to_gmt(data["Timestamp"][:19])
-
-            arr.append((tag[0],data["Value"],data["Timestamp"],time_stamp))
-        
-        print(arr)
-
-    except Exception as e:
-        print("An exception occurred in save_data: ", str(e))
-
-
-def fetch(urls, username, password):
-    try:
-        for url in urls:
-            response = requests.get(url, auth=HTTPBasicAuth(username, password), verify=False)
-            if response.status_code == 200:
-                data = response.json()
-                save_data(data, tags=tag_lists)
-            else:
-                print(f"Gagal mengambil data dari {url}, status code: {response.status_code}")
-    except Exception as e:
-        print("An exception occurred during fetch:", str(e))
-
-
-
-def index():
-    try:
-        while True:
-            now = datetime.now()
-
-            while True:
-                conn = check_pi_connection()
-                if not conn:
-                    print("=============================================================")
-                    print(
-                        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "Connection failed, retrying in 10 seconds",
-                    )
-                    time.sleep(10)  # Retry setiap 10 detik jika koneksi gagal
-                else:        
-                    print("=============================================================")
-                    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
-                    break
-
-
-            username = os.getenv("PI_SERVER_USERNAME")
-            password = os.getenv("PI_SERVER_PASSWORD")
-            host = os.getenv("PI_SERVER_ENDPOINT")
-            base_url = f"{host}streams/{{}}/value?time={now}"
-            urls = [base_url.format(tag[1]) for tag in tag_lists]
-            fetch(urls, username, password)
             
-            # Cek apakah waktu sekarang adalah pukul 3 pagi
-            # if now.hour == 3 and now.minute == 0:
-            #     print("Mengambil data pada:", now)
-                
-            #     # Memanggil fungsi fetch untuk mengambil data dari URL
-            #     fetch(urls)
-                
-            #     # Tunggu 24 jam sebelum loop berikutnya
-            #     time.sleep(86400)
-            # else:
-            #     # Jika belum pukul 3 pagi, tunggu 1 menit sebelum cek lagi
-            #     time.sleep(60)
-                
-    except Exception as e:
-        print("An exception occurred", str(e))
+            time_stamp = format_to_gmt(now.strftime("%Y-%m-%dT%H:%M:%S"))
+           
+            arr.append(
+                (
+                    tag[0],
+                    value,
+                    time_stamp,
+                    time_stamp
+                )
+            )
+        create_fft(arr)
 
-if __name__ == "__main__":
-    index()
+        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"Total Data saved: {len(arr)}")
+
+    except Exception as e:
+        print("An exception occurred: ", str(e))
+
+
+async def send_data(urls, data):
+    try:
+        async with aiohttp.ClientSession() as session:
+            # Ambil data selama 1 menit
+            start_time = time.time()
+            total_data_retrieved = 0  # Untuk menghitung total data yang diambil
+            while time.time() - start_time < 60:  # 1 menit
+                tasks = [fetch_data(session, url) for url in urls]  # Ambil semua URL dalam satu batch
+                res = await asyncio.gather(*tasks)
+
+                # Hitung dan simpan data
+                total_data_retrieved += len(res)  # Tambahkan ke total data yang diambil
+                save_data(res, data)
+
+                print("=============================================================")
+
+            print(f"Total data retrieved in 1 minute: {total_data_retrieved}")
+
+    except Exception as e:
+        print("An exception occurred: ", str(e))
+
+
+async def fetch_data(session, url):
+    username = Config.PI_SERVER_USER
+    password = Config.PI_SERVER_PASSWORD
+
+    try:
+        auth = aiohttp.BasicAuth(login=username, password=password)
+        async with session.get(url, auth=auth, ssl=False) as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data
+    except Exception as e:
+        return {"error": f"An error occurred: {str(e)}"}
+
+
+def jadwal_pengambilan_data():
+    try:
+        now = datetime.now()
+        host = os.getenv("PI_SERVER_ENDPOINT")
+        base_url = host + f"streams/{{}}/value?time={now}"
+        
+        tag_lists = get_tags_by_id(3865, 3866, 3870, 3871)
+        urls = [base_url.format(tag[1]) for tag in tag_lists]
+
+        conn = check_pi_connection()
+        if conn == False:
+            print("=============================================================")
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Connection failed, retrying in 10 seconds")
+        else:        
+            print("=============================================================")
+            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
+            
+            asyncio.run(send_data(urls, tag_lists))
+
+    except Exception as e:
+        print('An exception occurred', str(e))
+
+
+# Jadwalkan pengambilan data setiap hari pada waktu tertentu
+schedule.every().day.at("03:00").do(jadwal_pengambilan_data)  # Ganti waktu sesuai kebutuhan
+
+print("Jadwal pengambilan data telah diatur.")
+
+# Menjalankan jadwal secara terus menerus
+while True:
+    jadwal_pengambilan_data()
+    # schedule.run_pending()
+    time.sleep(86400 - 60)

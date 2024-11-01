@@ -1,6 +1,6 @@
+import datetime
 from database import getConnection
-from requests import get, post
-from config import Config
+from datetime import datetime
 
 
 def get_all_tags():
@@ -40,9 +40,9 @@ def get_tags_by_id(*tags_id):
 def create_fft(data):
     try:
       conn = getConnection()
-      
+
       query = """
-      INSERT INTO dl_fft_fecth_temp (tag_id, value, time_stamp, created_at, updated_at) VALUES (%s,%s,%s,%s,%s)
+      INSERT INTO dl_fft_fetch_temp (tag_id, value, created_at, updated_at) VALUES (%s,%s,%s,%s)
       """
       
       cur = conn.cursor()
