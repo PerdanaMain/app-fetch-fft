@@ -2,7 +2,6 @@ import datetime
 from database import getConnection
 from datetime import datetime
 
-
 def get_all_tags():
     try:
         conn = getConnection()
@@ -13,7 +12,6 @@ def get_all_tags():
         return tags
     except Exception as e:
       print('An exception occurred: ', e)
-
 
 def get_tags_by_id(*tags_id):
     try:
@@ -34,22 +32,20 @@ def get_tags_by_id(*tags_id):
         if conn:
             conn.close()
 
-   
-
 
 def create_fft(data):
     try:
-      conn = getConnection()
+        conn = getConnection()
 
-      query = """
-      INSERT INTO dl_fft_fetch_temp (tag_id, value, created_at, updated_at) VALUES (%s,%s,%s,%s)
-      """
-      
-      cur = conn.cursor()
-      
-      cur.executemany(query,data)
-      conn.commit()
-      cur.close()
+        query = """
+        INSERT INTO dl_fft_fetch (tag_id, value, created_at, updated_at) VALUES (%s,%s,%s,%s)
+        """
+        
+        cur = conn.cursor()
+        
+        cur.executemany(query,data)
+        conn.commit()
+        cur.close()
       
     except Exception as e:
       print('An exception occurred: ', e)

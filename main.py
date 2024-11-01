@@ -1,113 +1,115 @@
-from model import get_tags_by_id, create_fft
-from database import check_pi_connection
-from config import Config
-from datetime import datetime
-from format_gmt import format_to_gmt
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct  3 16:04:44 2024
+
+@author: Acer
+"""
+
 import asyncio
 import aiohttp  # type: ignore
-import os
-import schedule  # type: ignore
-import time
+import warnings
+import pytz
+from datetime import datetime, timedelta
+from model import get_tags_by_id, create_fft
+from format_gmt import format_to_gmt
+from database import check_pi_connection
+import time  # For sleep functionality
 
-def save_data(data, tags):
-    try:
-        now = datetime.now()
-        arr = []
-        for i, tag in enumerate(tags):
-            if "Value" not in data[i]:
-                continue
+warnings.filterwarnings("ignore")
 
-            value = data[i]["Value"]
-            if isinstance(value, dict):
-                value = value["Value"]
-
-            elif not isinstance(value, (str, float, int, bool)):
-                value = str(value)
-            
-            time_stamp = format_to_gmt(now.strftime("%Y-%m-%dT%H:%M:%S"))
-           
-            arr.append(
-                (
-                    tag[0],
-                    value,
-                    time_stamp,
-                    time_stamp
-                )
-            )
-        create_fft(arr)
-
-        print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), f"Total Data saved: {len(arr)}")
-
-    except Exception as e:
-        print("An exception occurred: ", str(e))
-
-
-async def send_data(urls, data):
-    try:
-        async with aiohttp.ClientSession() as session:
-            # Ambil data selama 1 menit
-            start_time = time.time()
-            total_data_retrieved = 0  # Untuk menghitung total data yang diambil
-            while time.time() - start_time < 60:  # 1 menit
-                tasks = [fetch_data(session, url) for url in urls]  # Ambil semua URL dalam satu batch
-                res = await asyncio.gather(*tasks)
-
-                # Hitung dan simpan data
-                total_data_retrieved += len(res)  # Tambahkan ke total data yang diambil
-                save_data(res, data)
-
-                print("=============================================================")
-
-            print(f"Total data retrieved in 1 minute: {total_data_retrieved}")
-
-    except Exception as e:
-        print("An exception occurred: ", str(e))
-
+# Daftar ID tag yang ingin diambil
+tag_ids = get_tags_by_id(3865, 3866, 3870, 3871)
 
 async def fetch_data(session, url):
-    username = Config.PI_SERVER_USER
-    password = Config.PI_SERVER_PASSWORD
-
+    username = "tjb.piwebapi"
+    password = "PLNJepara@2024"
+    auth = aiohttp.BasicAuth(username, password)
+    
     try:
-        auth = aiohttp.BasicAuth(login=username, password=password)
         async with session.get(url, auth=auth, ssl=False) as response:
-            response.raise_for_status()
-            data = await response.json()
-            return data
+            return await response.json()
     except Exception as e:
-        return {"error": f"An error occurred: {str(e)}"}
+        print(f"Request Error for URL {url}: {e}")
+        return None
 
-
-def jadwal_pengambilan_data():
-    try:
-        now = datetime.now()
-        host = os.getenv("PI_SERVER_ENDPOINT")
-        base_url = host + f"streams/{{}}/value?time={now}"
+async def gather_data(start_time, end_time):
+    async with aiohttp.ClientSession() as session:
+        tasks = []
         
-        tag_lists = get_tags_by_id(3865, 3866, 3870, 3871)
-        urls = [base_url.format(tag[1]) for tag in tag_lists]
+        while start_time < end_time:
+            tgl = start_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-        conn = check_pi_connection()
-        if conn == False:
+            for tag_id in tag_ids:
+                url = (
+                    f"https://10.47.0.54/piwebapi/streams/{tag_id[1]}/value?time={tgl}"
+                )
+                tasks.append(fetch_data(session, url))
+                
+            start_time += timedelta(milliseconds=60)  # Mengatur interval menjadi 60 ms
+
+        responses = await asyncio.gather(*tasks)
+        return responses
+
+def save_data(responses):
+    arr = []
+    for i, response in enumerate(responses):
+        if response and "Value" in response:
+            tag_id = tag_ids[i % len(tag_ids)][0]  # Assuming tag_id is in the first element of tag_ids
+            value = response["Value"]
+            if isinstance(value, dict):
+                value = value.get("Value", None)  # Handle case where value might be a dict
+
+            # Format the timestamp properly
+            time_stamp = format_to_gmt(response["Timestamp"][:19])  # Adjust based on your timestamp format
+            arr.append((tag_id, value, time_stamp, time_stamp))
+
+    if arr:
+        create_fft(arr)
+        print(f"Total Data saved: {len(arr)}")
+
+def main():
+    while True:
+
+        while True:
+            conn = check_pi_connection()
+            if conn == False:
+                print("=============================================================")
+                print(
+                    datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Connection failed, retrying in 10 seconds",
+                )
+            else:        
+                print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
+                print("=============================================================")
+                break
+
+
+        now = datetime.now(pytz.timezone("Asia/Jakarta"))
+        # Check if the current time is 3 AM
+        if now.hour == 3 and now.minute == 0:
+            tanggal = now
+            end_date = tanggal + timedelta(minutes=1)
+
+            print("Start Time: ", tanggal)
+
+            loop = asyncio.get_event_loop()
+            responses = loop.run_until_complete(gather_data(tanggal, end_date))
+
+            # Filter out None responses
+            responses = [response for response in responses if response is not None]
+            print(f"Total records fetched: {len(responses)}")
+
+            # Save the fetched data into the database
+            save_data(responses)
+
+            # Sleep for 60 seconds to avoid multiple executions within the same minute
+            time.sleep(60)
+        else:
+            print("Belum Jam 3 pagi")
             print("=============================================================")
-            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Connection failed, retrying in 10 seconds")
-        else:        
-            print("=============================================================")
-            print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "Start fetching data")
-            
-            asyncio.run(send_data(urls, tag_lists))
 
-    except Exception as e:
-        print('An exception occurred', str(e))
+            # Sleep for 1 minute before checking the time again
+            time.sleep(60)
 
-
-# Jadwalkan pengambilan data setiap hari pada waktu tertentu
-schedule.every().day.at("03:00").do(jadwal_pengambilan_data)  # Ganti waktu sesuai kebutuhan
-
-print("Jadwal pengambilan data telah diatur.")
-
-# Menjalankan jadwal secara terus menerus
-while True:
-    # jadwal_pengambilan_data()
-    schedule.run_pending()
-    time.sleep(86400 - 60)
+if __name__ == "__main__":
+    main()
