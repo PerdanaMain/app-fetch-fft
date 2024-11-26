@@ -1,4 +1,5 @@
 import datetime
+from FetchFFT.log import print_log
 from database import getConnection
 from datetime import datetime
 
@@ -12,6 +13,7 @@ def get_all_tags():
         return tags
     except Exception as e:
       print('An exception occurred: ', e)
+      print_log('An exception occurred: ', e)
 
 def get_tags_by_id(*tags_id):
     try:
@@ -28,6 +30,7 @@ def get_tags_by_id(*tags_id):
         return tags
     except Exception as e:
         print('An exception occurred: ', e)
+        print_log('An exception occurred: ', e)
     finally:
         if conn:
             conn.close()
@@ -49,3 +52,4 @@ def create_fft(data):
       
     except Exception as e:
       print('An exception occurred: ', e)
+      print_log('An exception occurred: ', e)

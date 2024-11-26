@@ -1,12 +1,11 @@
-import psycopg2 # type: ignore
 from config import Config
 from requests.auth import HTTPBasicAuth
 from requests.exceptions import ConnectionError, Timeout, RequestException
-import requests
 from datetime import datetime
+from log import print_log
+import psycopg2 # type: ignore
+import requests
 import pytz
-
-
 
 def getConnection():
     try:
@@ -20,6 +19,7 @@ def getConnection():
         return conn
     except Exception as e:
         print(f"Error connecting to the database: {e}")
+        print_log(f"Error connecting to the database: {e}")
         return None
 
 def check_pi_connection():
@@ -38,25 +38,26 @@ def check_pi_connection():
             timeout=10,
         )
         if test_conn.status_code == 200:
-            print("Connection successful, status code:", test_conn.status_code)
+            print_log(f"Connection successful, status code: {test_conn.status_code}")
+            print(f"Connection successful, status code: {test_conn.status_code}")
             return True
         else:
-            log_disconnection(f"Received unexpected status code: {test_conn.status_code}")
+            print_log(f"Received unexpected status code: {test_conn.status_code}")
             print(f"Received unexpected status code: {test_conn.status_code}")
             return False
 
     except ConnectionError:
-        log_disconnection("Error: Unable to connect to the server. The connection was lost.")
+        print_log("Error: Unable to connect to the server. The connection was lost.")
         print("Error: Unable to connect to the server. The connection was lost.")
         return False
 
     except Timeout:
-        log_disconnection("Error: The request timed out.")
+        print_log("Error: The request timed out.")
         print("Error: The request timed out.")
         return False
 
     except RequestException as e:
-        log_disconnection(f"An error occurred: {e}")
+        print_log(f"An error occurred: {e}")
         print(f"An error occurred: {e}")
         return False
 

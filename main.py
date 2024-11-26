@@ -1,19 +1,13 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct  3 16:04:44 2024
-
-@author: Acer
-"""
-
 import asyncio
 import aiohttp  # type: ignore
 import warnings
 import pytz
+import time  # For sleep functionality
+from log import print_log
 from datetime import datetime, timedelta
 from model import get_tags_by_id, create_fft
 from format_gmt import format_to_gmt
 from database import check_pi_connection
-import time  # For sleep functionality
 
 warnings.filterwarnings("ignore")
 
@@ -66,6 +60,7 @@ def save_data(responses):
     if arr:
         create_fft(arr)
         print(f"Total Data saved: {len(arr)}")
+        print_log(f"Total Data saved: {len(arr)}")
 
 def main():
     while True:
@@ -98,6 +93,7 @@ def main():
             # Filter out None responses
             responses = [response for response in responses if response is not None]
             print(f"Total records fetched: {len(responses)}")
+            print_log(f"Total records fetched: {len(responses)}")
 
             # Save the fetched data into the database
             save_data(responses)
