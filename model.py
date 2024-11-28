@@ -1,5 +1,5 @@
 import datetime
-from FetchFFT.log import print_log
+from log import print_log
 from database import getConnection
 from datetime import datetime
 
