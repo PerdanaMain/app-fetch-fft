@@ -1,4 +1,4 @@
-from dotenv import load_dotenv
+from dotenv import load_dotenv # type: ignore
 import os
 
 load_dotenv()
@@ -9,6 +9,13 @@ class Config:
     PASSWORD = os.getenv("DB_PASS")
     DATABASE = os.getenv("DB_NAME")
     PORT = os.getenv("DB_PORT")
+
+    HOST_FETCH = os.getenv("DB_FETCH_HOST")
+    USER_FETCH = os.getenv("DB_FETCH_USER")
+    PASSWORD_FETCH = os.getenv("DB_FETCH_PASS")
+    DATABASE_FETCH = os.getenv("DB_FETCH_NAME")
+    PORT_FETCH = os.getenv("DB_FETCH_PORT")
+    
     PI_SERVER = os.getenv("PI_SERVER_ENDPOINT")
     PI_SERVER_USER = os.getenv("PI_SERVER_USERNAME")
     PI_SERVER_PASSWORD = os.getenv("PI_SERVER_PASSWORD")

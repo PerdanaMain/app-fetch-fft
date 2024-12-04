@@ -1,6 +1,6 @@
 import datetime
 from log import print_log
-from database import getConnection
+from database import *
 from datetime import datetime
 
 def get_all_tags():
@@ -14,6 +14,23 @@ def get_all_tags():
     except Exception as e:
       print(f'An exception occurred: {e}')
       print_log(f'An exception occurred: {e}')
+
+def get_vibration_parts():
+    try:
+        conn = get_connection()
+        cur = conn.cursor()
+
+        query = "SELECT id, web_id, type_id, part_name  FROM pf_parts WHERE type_id = '673b26b9-fb94-40aa-8c33-ccea214c0ef3'"
+
+        cur.execute(query)
+        parts = cur.fetchall()
+        return parts
+    except Exception as e:
+        print(f'An exception occurred: {e}')
+        print_log(f'An exception occurred: {e}')
+    finally:
+        if conn:
+            conn.close()
 
 def get_tags_by_id(*tags_id):
     try:
@@ -41,7 +58,7 @@ def create_fft(data):
         conn = getConnection()
 
         query = """
-        INSERT INTO dl_fft_fetch (tag_id, value, created_at, updated_at) VALUES (%s,%s,%s,%s)
+        INSERT INTO dl_fft_fetch (id, part_id, value, created_at, updated_at) VALUES (%s,%s,%s,%s,%s)
         """
         
         cur = conn.cursor()

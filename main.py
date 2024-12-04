@@ -2,17 +2,18 @@ import asyncio
 import aiohttp  # type: ignore
 import warnings
 import pytz
+import uuid
 import time  # For sleep functionality
 from log import print_log
 from datetime import datetime, timedelta
-from model import get_tags_by_id, create_fft
+from model import *
 from format_gmt import format_to_gmt
 from database import check_pi_connection
 
 warnings.filterwarnings("ignore")
 
 # Daftar ID tag yang ingin diambil
-tag_ids = get_tags_by_id(3865, 3866, 3870, 3871)
+tag_ids = get_vibration_parts()
 
 async def fetch_data(session, url):
     username = "tjb.piwebapi"
@@ -53,9 +54,11 @@ def save_data(responses):
             if isinstance(value, dict):
                 value = value.get("Value", None)  # Handle case where value might be a dict
 
+
+            gen_uuid = str(uuid.uuid4())
             # Format the timestamp properly
             time_stamp = format_to_gmt(response["Timestamp"][:19])  # Adjust based on your timestamp format
-            arr.append((tag_id, value, time_stamp, time_stamp))
+            arr.append((gen_uuid, tag_id, value, time_stamp, time_stamp))
 
     if arr:
         create_fft(arr)
@@ -81,7 +84,7 @@ def main():
 
         now = datetime.now(pytz.timezone("Asia/Jakarta"))
         # Check if the current time is 3 AM
-        if now.hour == 3 and now.minute == 0:
+        if now.hour == 3:
             tanggal = now
             end_date = tanggal + timedelta(minutes=1)
 

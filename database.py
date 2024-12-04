@@ -10,6 +10,21 @@ import pytz
 def getConnection():
     try:
         conn = psycopg2.connect(
+            host=Config.HOST_FETCH,
+            database=Config.DATABASE_FETCH,
+            user=Config.USER,
+            password=Config.PASSWORD_FETCH,
+            port=Config.PORT_FETCH
+        )
+        return conn
+    except Exception as e:
+        print(f"Error connecting to the database: {e}")
+        print_log(f"Error connecting to the database: {e}")
+        return None
+
+def get_connection():
+    try:
+        conn = psycopg2.connect(
             host=Config.HOST,
             database=Config.DATABASE,
             user=Config.USER,
