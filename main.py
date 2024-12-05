@@ -84,7 +84,7 @@ def main():
 
         now = datetime.now(pytz.timezone("Asia/Jakarta"))
         # Check if the current time is 3 AM
-        if now.hour == 3:
+        if now.hour == 3 and now.minute == 0:
             tanggal = now
             end_date = tanggal + timedelta(minutes=1)
 
