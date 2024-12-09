@@ -64,7 +64,7 @@ def save_data(responses):
 
 
 def main():
-    start_date = datetime(2024, 12, 9, 3, 0)
+    start_date = datetime(2024, 10, 21, 3, 0)
     current_date = datetime.now()
 
     while True:
